@@ -1,0 +1,59 @@
+#!/bin/bash
+## check_memory_joyent.sh for check_memory_joyent in /Users/scalp/nagios/check_memory_joyent
+##
+## Made by Anthony Scalisi
+## <scalisi.a@gmail.com>
+##
+## Started on  Wed Dec 19 09:53:12 2012 Anthony Scalisi
+## Last update Wed Dec 19 10:08:09 2012 Anthony Scalisi
+##
+
+OK_STATE=0
+WARNING_STATE=1
+CRITICAL_STATE=2
+UNKNOWN_STATE=3
+EXPECTED_ARGS=4
+#E_BADARGS=65
+
+if [[ "$#" -ne "$EXPECTED_ARGS" || "$1" != '-w' || "$3" != '-c' ]]; then
+    echo "Usage: `basename $0` [-w] warning_value [-c] critical_value"
+    exit ${UNKNOWN_STATE}
+fi
+
+if [ -x /opt/local/bin/sm-meminfo ]; then
+    mem=(`sm-meminfo -p rss | sed 1d`)
+elif [ -x /opt/local/bin/jinf ]; then
+    mem=(`jinf -m -p`)
+else
+    echo "UNKNOWN - Could not figure memory status. Please check it out ASAP."
+    exit ${UNKNOWN_STATE}
+fi
+
+function pct () {
+    echo "scale = 3; $1 / $2 * 100" | bc | awk '{printf "%.0f\n", $perc}'
+}
+
+cap=$(echo ${mem[0]} | awk -F ':' '{print $2}')
+used=$(echo ${mem[1]} | awk -F ':' '{print $2}')
+
+perc=$(pct $used $cap)
+
+if [[ $perc -lt 0 ]]; then
+    echo "UNKNOWN - Could not figure memory status. Please check it out ASAP."
+    exit ${UNKNOWN_STATE}
+elif [[ "$4" -lt "$2" ]]; then
+    echo "UNKNOWN - Critical value < Warning value. Please verify your check."
+    exit ${UNKNOWN_STATE}
+elif [[ "$2" -le 0 || "$4" -le 0 ]]; then
+    echo "UNKNOWN - Warning or Critical values can't be negative. Please verify your check."
+    exit ${UNKNOWN_STATE}
+elif [[ $perc -ge $2 && $perc    -lt $4 ]]; then
+    echo "WARNING - Memory used : $perc %"
+    exit ${WARNING_STATE}
+elif [[ $perc -ge $2 && $perc -ge $4 ]]; then
+    echo "CRITICAL - Memory used : $perc %"
+    exit ${CRITICAL_STATE}
+else
+    echo "OK - Memory used : $perc %"
+    exit ${OK_STATE}
+fi
