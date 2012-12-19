@@ -21,9 +21,9 @@ if [[ "$#" -ne "$EXPECTED_ARGS" || "$1" != '-w' || "$3" != '-c' ]]; then
 fi
 
 if [ -x /opt/local/bin/sm-meminfo ]; then
-    mem=(`sm-meminfo -p rss | sed 1d`)
+    mem=(`/opt/local/bin/sm-meminfo -p rss | sed 1d`)
 elif [ -x /opt/local/bin/jinf ]; then
-    mem=(`jinf -m -p`)
+    mem=(`/opt/local/bin/jinf -m -p`)
 else
     echo "UNKNOWN - Could not figure memory status. Please check it out ASAP."
     exit ${UNKNOWN_STATE}
