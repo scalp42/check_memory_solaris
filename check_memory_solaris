@@ -33,8 +33,8 @@ function pct () {
     echo "scale = 3; $1 / $2 * 100" | bc | awk '{printf "%.0f\n", $perc}'
 }
 
-cap=$(echo ${mem[0]} | awk -F ':' '{print $2}')
-used=$(echo ${mem[1]} | awk -F ':' '{print $2}')
+cap=$(echo ${mem[0]} | sed 's/mem_cap\://')
+used=$(echo ${mem[1]} | sed 's/mem_used\://')
 
 perc=$(pct $used $cap)
 
